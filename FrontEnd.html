@@ -1,0 +1,585 @@
+FrontEnd
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Change Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f7;
+            height: 100vh;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+        }
+        
+        /* App Container */
+        .app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 480px;
+            margin: 0 auto;
+            background: #fff;
+            box-shadow: 0 0 40px rgba(0,0,0,0.1);
+        }
+        
+        /* Status Bar */
+        .status-bar {
+            height: 44px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        
+        /* App Header */
+        .app-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px 20px 30px;
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .app-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+        
+        .app-subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+            text-align: center;
+        }
+        
+        /* Main Content */
+        .app-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Input Card */
+        .input-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-group:last-child {
+            margin-bottom: 0;
+        }
+        
+        .input-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .input-icon {
+            font-size: 20px;
+        }
+        
+        .input-wrapper {
+            position: relative;
+        }
+        
+        .currency-symbol {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 24px;
+            font-weight: 600;
+            color: #999;
+            pointer-events: none;
+        }
+        
+        .app-input {
+            width: 100%;
+            padding: 18px 18px 18px 45px;
+            border: 2px solid #e5e5e5;
+            border-radius: 12px;
+            font-size: 28px;
+            font-weight: 600;
+            color: #333;
+            background: #fafafa;
+            transition: all 0.3s ease;
+        }
+        
+        .app-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+        
+        /* Buttons */
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .app-button {
+            padding: 18px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+        
+        .btn-secondary {
+            background: #f5f5f7;
+            color: #333;
+        }
+        
+        .btn-secondary:active {
+            background: #e5e5e7;
+            transform: scale(0.98);
+        }
+        
+        /* Result Card */
+        .result-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            display: none;
+            animation: slideUp 0.4s ease;
+        }
+        
+        .result-card.show {
+            display: block;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .change-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .change-label {
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        
+        .change-amount {
+            font-size: 56px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .breakdown-section {
+            margin-top: 24px;
+        }
+        
+        .breakdown-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .denom-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            margin-bottom: 10px;
+        }
+        
+        .denom-name {
+            font-size: 15px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .denom-count {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 15px;
+            font-weight: 600;
+        }
+        
+        /* Alert Message */
+        .alert {
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: none;
+            animation: shake 0.5s ease;
+        }
+        
+        .alert.show {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .alert-error {
+            background: #fee;
+            color: #c33;
+            border: 1px solid #fcc;
+        }
+        
+        .alert-icon {
+            font-size: 24px;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        /* Loading Spinner */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+        
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+        
+        /* Bottom Safe Area */
+        .safe-area-bottom {
+            height: env(safe-area-inset-bottom);
+            background: white;
+        }
+        
+        /* Haptic Feedback Helper */
+        @keyframes haptic {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.95); }
+            100% { transform: scale(1); }
+        }
+        
+        .haptic {
+            animation: haptic 0.1s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- Status Bar -->
+        <div class="status-bar">
+            💰 Change Calculator
+        </div>
+        
+        <!-- App Header -->
+        <div class="app-header">
+            <div class="app-title">Change Return</div>
+            <div class="app-subtitle">Calculate change instantly</div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="app-content">
+            <!-- Input Card -->
+            <div class="input-card">
+                <div class="input-group">
+                    <div class="input-label">
+                        <span class="input-icon">🧾</span>
+                        <span>Bill Amount</span>
+                    </div>
+                    <div class="input-wrapper">
+                        <div class="currency-symbol">$</div>
+                        <input type="number" 
+                               class="app-input" 
+                               id="billAmount" 
+                               placeholder="0.00" 
+                               step="0.01" 
+                               min="0"
+                               inputmode="decimal">
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <div class="input-label">
+                        <span class="input-icon">💵</span>
+                        <span>Amount Paid</span>
+                    </div>
+                    <div class="input-wrapper">
+                        <div class="currency-symbol">$</div>
+                        <input type="number" 
+                               class="app-input" 
+                               id="paidAmount" 
+                               placeholder="0.00" 
+                               step="0.01" 
+                               min="0"
+                               inputmode="decimal">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Buttons -->
+            <div class="button-group">
+                <button class="app-button btn-primary" id="calculateBtn" onclick="calculate()">
+                    <span id="btnText">✓ Calculate</span>
+                </button>
+                <button class="app-button btn-secondary" onclick="reset()">
+                    ↻ Reset
+                </button>
+            </div>
+            
+            <!-- Alert -->
+            <div class="alert alert-error" id="alert">
+                <span class="alert-icon">⚠️</span>
+                <span id="alertText"></span>
+            </div>
+            
+            <!-- Result Card -->
+            <div class="result-card" id="resultCard">
+                <div class="change-header">
+                    <div class="change-label">Change to Return</div>
+                    <div class="change-amount">$<span id="changeAmount">0.00</span></div>
+                </div>
+                
+                <div class="breakdown-section">
+                    <div class="breakdown-title">
+                        <span>💰</span>
+                        <span>Breakdown</span>
+                    </div>
+                    <div id="breakdownList"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Safe Area Bottom -->
+        <div class="safe-area-bottom"></div>
+    </div>
+    
+    <script>
+        // Haptic feedback simulation
+        function haptic() {
+            if (navigator.vibrate) {
+                navigator.vibrate(10);
+            }
+        }
+        
+        // Calculate function
+        function calculate() {
+            haptic();
+            
+            const billAmount = parseFloat(document.getElementById('billAmount').value);
+            const paidAmount = parseFloat(document.getElementById('paidAmount').value);
+            const alert = document.getElementById('alert');
+            const resultCard = document.getElementById('resultCard');
+            const calculateBtn = document.getElementById('calculateBtn');
+            const btnText = document.getElementById('btnText');
+            
+            // Hide previous messages
+            alert.classList.remove('show');
+            resultCard.classList.remove('show');
+            
+            // Validate
+            if (isNaN(billAmount) || isNaN(paidAmount)) {
+                showAlert('Please enter valid amounts');
+                return;
+            }
+            
+            if (billAmount < 0 || paidAmount < 0) {
+                showAlert('Amounts cannot be negative');
+                return;
+            }
+            
+            if (paidAmount < billAmount) {
+                showAlert('Paid amount is less than bill');
+                return;
+            }
+            
+            // Show loading
+            calculateBtn.disabled = true;
+            btnText.innerHTML = '<div class="spinner"></div>';
+            
+            // Simulate calculation delay for better UX
+            setTimeout(() => {
+                // Calculate change
+                let change = Math.round((paidAmount - billAmount) * 100) / 100;
+                
+                // Display change
+                document.getElementById('changeAmount').textContent = change.toFixed(2);
+                
+                // Calculate denominations
+                const denoms = [
+                    {name: '$100', val: 100},
+                    {name: '$50', val: 50},
+                    {name: '$20', val: 20},
+                    {name: '$10', val: 10},
+                    {name: '$5', val: 5},
+                    {name: '$1', val: 1},
+                    {name: 'Quarter', val: 0.25},
+                    {name: 'Dime', val: 0.10},
+                    {name: 'Nickel', val: 0.05},
+                    {name: 'Penny', val: 0.01}
+                ];
+                
+                const breakdown = [];
+                let remaining = change;
+                
+                denoms.forEach(d => {
+                    const count = Math.floor(remaining / d.val);
+                    if (count > 0) {
+                        breakdown.push({name: d.name, count: count});
+                        remaining = Math.round((remaining - (count * d.val)) * 100) / 100;
+                    }
+                });
+                
+                // Display breakdown
+                const list = document.getElementById('breakdownList');
+                list.innerHTML = '';
+                
+                if (breakdown.length === 0) {
+                    list.innerHTML = '<div class="empty-state"><div class="empty-icon">✓</div><div>No change needed<br>Exact payment!</div></div>';
+                } else {
+                    breakdown.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'denom-item';
+                        div.innerHTML = `
+                            <div class="denom-name">${item.name}</div>
+                            <div class="denom-count">×${item.count}</div>
+                        `;
+                        list.appendChild(div);
+                    });
+                }
+                
+                // Show result
+                resultCard.classList.add('show');
+                haptic();
+                
+                // Reset button
+                calculateBtn.disabled = false;
+                btnText.textContent = '✓ Calculate';
+            }, 500);
+        }
+        
+        function showAlert(message) {
+            const alert = document.getElementById('alert');
+            const alertText = document.getElementById('alertText');
+            alertText.textContent = message;
+            alert.classList.add('show');
+            haptic();
+            haptic();
+        }
+        
+        function reset() {
+            haptic();
+            document.getElementById('billAmount').value = '';
+            document.getElementById('paidAmount').value = '';
+            document.getElementById('alert').classList.remove('show');
+            document.getElementById('resultCard').classList.remove('show');
+        }
+        
+        // Enter key support
+        document.getElementById('billAmount').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('paidAmount').focus();
+            }
+        });
+        
+        document.getElementById('paidAmount').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                calculate();
+            }
+        });
+        
+        // Prevent zoom on double tap
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', (e) => {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+    </script>
+</body>
+</html>
