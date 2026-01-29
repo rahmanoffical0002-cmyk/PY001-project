@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Neon Change Calculator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary: #8A2BE2; /* Neon Purple */
+            --secondary: #00FFFF; /* Cyan */
+            --accent: #FF00FF; /* Magenta */
+            --glass: rgba(20, 20, 35, 0.85);
+            --text-main: #ffffff;
+            --text-muted: #a0a0c0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #0b0b15;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            color: white;
+        }
+
+        /* --- GEOMETRY DASH STYLE BACKGROUND --- */
+        .geo-bg {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            background: linear-gradient(180deg, #0b0b15 0%, #2a1a4a 100%);
+            overflow: hidden;
+        }
+
+        /* The Grid Floor */
+        .grid-floor {
+            position: absolute;
+            bottom: 0;
+            left: -50%;
+            width: 200%;
+            height: 60%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.3) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.3) 1px, transparent 1px);
+            background-size: 50px 50px;
+            transform: perspective(500px) rotateX(60deg);
+            animation: moveGrid 3s linear infinite;
+        }
+
+        @keyframes moveGrid {
+            0% { transform: perspective(500px) rotateX(60deg) translateY(0); }
+            100% { transform: perspective(500px) rotateX(60deg) translateY(50px); }
+        }
+
+        /* Floating Triangles */
+        .shape {
+            position: absolute;
+            opacity: 0.5;
+            animation: floatShape 8s infinite linear;
+        }
+        .triangle {
+            width: 0; height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-bottom: 35px solid var(--accent);
+        }
+        .square {
+            width: 40px; height: 40px;
+            border: 2px solid var(--secondary);
+            transform: rotate(45deg);
+        }
+
+        @keyframes floatShape {
+            0% { transform: translateX(-100px) rotate(0deg); }
+            100% { transform: translateX(110vw) rotate(360deg); }
+        }
+
+        /* --- APP CONTAINER --- */
+        .app {
+            width: 100%;
+            max-width: 480px;
+            height: 95vh;
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 30px rgba(138, 43, 226, 0.4);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* --- HEADER --- */
+        .app-header {
+            background: linear-gradient(90deg, #4A00E0 0%, #8E2DE2 100%);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* UPDATED HEADER STYLES */
+        .app-title { 
+            font-size: 26px; 
+            font-weight: 900; 
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+            /* Neon gradient text */
+            background: linear-gradient(to right, var(--secondary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 2px rgba(0, 255, 255, 0.5));
+            margin-bottom: 5px;
+        }
+        .app-subtitle { 
+            font-size: 14px; 
+            font-weight: 600;
+            color: var(--secondary);
+            letter-spacing: 1px;
+            margin-bottom: 20px; 
+            text-shadow: 0 0 5px rgba(138, 43, 226, 0.5);
+        }
+
+        /* Editable Header Inputs */
+        .header-inputs {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .h-input {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            border-radius: 8px;
+            padding: 8px;
+            color: white;
+            font-size: 12px;
+            width: 32%;
+            text-align: center;
+        }
+        .h-input::placeholder { color: rgba(255,255,255,0.6); }
+        .h-input:focus { outline: 2px solid var(--secondary); background: rgba(255,255,255,0.25); }
+
+        /* --- CONTENT --- */
+        .app-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        /* Input Cards */
+        .input-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .input-group { position: relative; margin-bottom: 20px; }
+        .input-group:last-child { margin-bottom: 0; }
+
+        .app-input {
+            width: 100%;
+            padding: 15px 15px 15px 40px;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            font-size: 20px;
+            font-weight: 700;
+            color: white;
+            background: rgba(0,0,0,0.3);
+            transition: 0.3s;
+        }
+
+        .app-input:focus {
+            border-color: var(--secondary);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+            outline: none;
+        }
+
+        .currency-symbol {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary);
+            font-size: 20px;
+        }
+
+        .input-label {
+            position: absolute;
+            top: -10px;
+            left: 15px;
+            background: #1a1a2e; /* Matches approximate bg */
+            padding: 0 5px;
+            font-size: 12px;
+            color: var(--secondary);
+            border-radius: 4px;
+        }
+
+        /* Buttons */
+        .button-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        
+        .app-button {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.1s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .app-button:active { transform: scale(0.95); }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #FF00FF, #00FFFF);
+            color: #0b0b15;
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.4);
+        }
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        /* Result Area */
+        .result-card {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 20px;
+            padding: 20px;
+            display: none;
+            border: 1px solid var(--secondary);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.1);
+        }
+        
+        .total-return { text-align: center; margin-bottom: 20px; border-bottom: 1px dashed rgba(255,255,255,0.2); padding-bottom: 15px; }
+        .total-label { font-size: 12px; text-transform: uppercase; color: var(--text-muted); }
+        
+        .change-amount {
+            font-size: 48px;
+            font-weight: 800;
+            background: linear-gradient(to right, #00FFFF, #FF00FF);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-top: 5px;
+        }
+
+        /* List Items */
+        .denom-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            animation: slideIn 0.3s forwards;
+            opacity: 0;
+            transform: translateX(-10px);
+        }
+        @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
+
+        .denom-count {
+            background: var(--primary);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* Money Confetti */
+        .money-particle {
+            position: absolute;
+            font-size: 24px;
+            top: -20px;
+            animation: fall linear forwards;
+            z-index: 100;
+            user-select: none;
+        }
+        @keyframes fall {
+            to { transform: translateY(110vh) rotate(720deg); }
+        }
+
+        /* Alert */
+        .alert { 
+            background: rgba(255, 0, 0, 0.2); 
+            border: 1px solid red; 
+            color: #ff9999; 
+            padding: 10px; 
+            border-radius: 8px; 
+            margin-bottom: 15px; 
+            font-size: 13px; 
+            display: none; 
+            text-align: center;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="geo-bg">
+        <div class="grid-floor"></div>
+        <div class="shape triangle" style="top: 20%; left: -50px; animation-duration: 10s;"></div>
+        <div class="shape square" style="top: 50%; left: -60px; animation-duration: 15s; border-color: #FF00FF;"></div>
+        <div class="shape triangle" style="top: 70%; left: -80px; animation-duration: 12s; border-bottom-color: #00FFFF;"></div>
+    </div>
+
+    <div class="app">
+        <div class="app-header">
+            <div class="app-title">Change Calc</div>
+            <div class="app-subtitle">Geometry Edition</div>
+            
+            <div class="header-inputs">
+                <input type="text" class="h-input" placeholder="Shop Name">
+                <input type="text" class="h-input" id="dateField" placeholder="Date">
+                <input type="text" class="h-input" placeholder="Cashier ID">
+            </div>
+        </div>
+
+        <div class="app-content">
+            <div class="input-card">
+                <div class="input-group">
+                    <label class="input-label">Bill Total</label>
+                    <span class="currency-symbol">₹</span>
+                    <input type="number" class="app-input" id="billAmount" placeholder="0.00" step="1">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Cash Given</label>
+                    <span class="currency-symbol">₹</span>
+                    <input type="number" class="app-input" id="paidAmount" placeholder="0.00" step="1">
+                </div>
+            </div>
+
+            <div class="alert" id="alert"></div>
+
+            <div class="button-group">
+                <button class="app-button btn-primary" onclick="calculate()">Calculate</button>
+                <button class="app-button btn-secondary" onclick="reset()">Reset</button>
+            </div>
+
+            <div class="result-card" id="resultCard">
+                <div class="total-return">
+                    <div class="total-label">Return Amount</div>
+                    <div class="change-amount">₹<span id="changeAmount">0.00</span></div>
+                </div>
+                <div id="breakdownList"></div>
+                
+                <button class="app-button btn-secondary" id="downloadBtn" onclick="downloadInvoice()" style="margin-top: 20px; width: 100%;">
+                    <span>📥</span> Download Invoice
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-fill Date
+        document.getElementById('dateField').value = new Date().toLocaleDateString();
+
+        // Standard Indian Denominations
+        const indianDenoms = [
+            { name: '₹500 Note', val: 500, icon: '💵' },
+            { name: '₹200 Note', val: 200, icon: '💵' },
+            { name: '₹100 Note', val: 100, icon: '💵' },
+            { name: '₹50 Note', val: 50, icon: '💵' },
+            { name: '₹20 Note', val: 20, icon: '💵' },
+            { name: '₹10 Note', val: 10, icon: '💵' },
+            { name: '₹5 Coin', val: 5, icon: '🪙' },
+            { name: '₹2 Coin', val: 2, icon: '🪙' },
+            { name: '₹1 Coin', val: 1, icon: '🪙' }
+        ];
+
+        function fireMoney() {
+            const symbols = ['₹', '💸', '💰', '💵'];
+            for (let i = 0; i < 30; i++) {
+                const el = document.createElement('div');
+                el.innerText = symbols[Math.floor(Math.random() * symbols.length)];
+                el.classList.add('money-particle');
+                
+                // Random positioning
+                el.style.left = Math.random() * 100 + '%';
+                el.style.animationDuration = (Math.random() * 2 + 1) + 's'; // 1s to 3s
+                
+                document.body.appendChild(el);
+                
+                // Cleanup
+                setTimeout(() => el.remove(), 3000);
+            }
+        }
+
+        function animateValue(obj, start, end, duration) {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerHTML = (progress * (end - start) + start).toFixed(2);
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        function calculate() {
+            const bill = parseFloat(document.getElementById('billAmount').value);
+            const paid = parseFloat(document.getElementById('paidAmount').value);
+            const alertBox = document.getElementById('alert');
+            const resultCard = document.getElementById('resultCard');
+
+            alertBox.style.display = 'none';
+            resultCard.style.display = 'none';
+
+            if (isNaN(bill) || isNaN(paid) || bill < 0 || paid < 0) {
+                alertBox.textContent = "Please enter valid amounts";
+                alertBox.style.display = 'block';
+                return;
+            }
+            if (paid < bill) {
+                alertBox.textContent = "Cash given is less than the bill!";
+                alertBox.style.display = 'block';
+                return;
+            }
+
+            // Calculations
+            let change = Math.round((paid - bill) * 100) / 100;
+            
+            resultCard.style.display = 'block';
+            animateValue(document.getElementById('changeAmount'), 0, change, 1000);
+            
+            // Fire Money Rain
+            fireMoney();
+
+            // Breakdown Logic
+            const list = document.getElementById('breakdownList');
+            list.innerHTML = '';
+            
+            let remaining = change;
+            let delay = 0;
+
+            if (remaining === 0) {
+                list.innerHTML = `<div style="text-align:center; padding:10px; color:#aaa;">Exact Amount Paid!</div>`;
+            } else {
+                indianDenoms.forEach(d => {
+                    const count = Math.floor(remaining / d.val);
+                    if (count > 0) {
+                        const div = document.createElement('div');
+                        div.className = 'denom-item';
+                        div.style.animationDelay = delay + 's';
+                        div.innerHTML = `
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <span style="font-size:20px">${d.icon}</span>
+                                <span>${d.name}</span>
+                            </div>
+                            <div class="denom-count">× ${count}</div>
+                        `;
+                        list.appendChild(div);
+                        remaining = Math.round((remaining - (count * d.val)) * 100) / 100;
+                        delay += 0.1;
+                    }
+                });
+            }
+        }
+
+        function reset() {
+            document.getElementById('billAmount').value = '';
+            document.getElementById('paidAmount').value = '';
+            document.getElementById('resultCard').style.display = 'none';
+            document.getElementById('alert').style.display = 'none';
+        }
+
+        // --- DOWNLOAD INVOICE FUNCTION ---
+        function downloadInvoice() {
+            const element = document.querySelector('.app'); // Capture the entire app card
+            const downloadBtn = document.getElementById('downloadBtn');
+
+            // 1. Hide the download button so it's not in the screenshot
+            downloadBtn.style.display = 'none';
+
+            // 2. Use html2canvas to capture the element
+            html2canvas(element, {
+                backgroundColor: '#1a1a2e', // Set a solid dark background for better capture quality
+                scale: 2, // Higher resolution
+                useCORS: true
+            }).then(canvas => {
+                // 3. Create a temporary link to trigger download
+                const link = document.createElement('a');
+                link.download = 'Geometry_Invoice_' + new Date().getTime() + '.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+
+                // 4. Bring the button back
+                downloadBtn.style.display = 'flex';
+            });
+        }
+    </script>
+</body>
+</html>
